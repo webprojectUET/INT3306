@@ -43,7 +43,8 @@ const userSchema = new mongoose.Schema({
     activeStatus: {
         type: Boolean,
         default: true,
-        require: true
+        require: true,
+        index: true
     },
     imagePath: {
         type: String,
@@ -62,7 +63,7 @@ userSchema.set('toJSON', {
         delete returnedObject._id
         delete returnedObject.__v
         delete returnedObject.password
-        delete returnedObject.activeStatus
+        delete returnedObject.typeAccount
     }
 })
 

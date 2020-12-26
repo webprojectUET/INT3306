@@ -26,10 +26,10 @@ const fileStorage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname)
-    }
+    }   
 })
 app.use(multer({ storage: fileStorage }).any())
-app.use("/api/real-state", realEstateRouter)
+app.use("/api/real-estate", realEstateRouter)
 app.use("/api/user", usersRouter)
 app.listen(port, () =>
     console.log(`Example app listening on port ${port}!`)
