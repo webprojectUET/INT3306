@@ -7,6 +7,7 @@ const server = require("http").Server(app);
 const io = require("socket.io")(server);
 const mongoose = require('mongoose')
 const cors = require("cors");
+const path = require("path")
 const realEstateRouter = require("./controllers/realEstate");
 const usersRouter = require("./controllers/user");
 app.use(express.json());
@@ -26,7 +27,7 @@ const fileStorage = multer.diskStorage({
     },
     filename: (req, file, cb) => {
         cb(null, file.originalname)
-    }   
+    }
 })
 app.use(multer({ storage: fileStorage }).any())
 app.use("/api/real-estate", realEstateRouter)
@@ -34,3 +35,6 @@ app.use("/api/user", usersRouter)
 app.listen(port, () =>
     console.log(`Example app listening on port ${port}!`)
 );
+app.get("/images/:name", async (req, res) => {
+    res.sendFile(path.join(process.cwd(), `/images/${req.params.name}`))
+})

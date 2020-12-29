@@ -30,7 +30,7 @@ usersRouter.post('/sign-up', [
         }).end()
     }
     if (req.body) {
-        const passwordHash = await bcrypt.hash(body.password, Config.saltRounds)
+        const passwordHash = await bcrypt.hash(body.password, Config.SALT_ROUNDS)
         let user = {
             ...req.body,
             password: passwordHash,
@@ -47,6 +47,7 @@ usersRouter.post("/sign-in", async (req, res) => {
     const passwordCorrect = user === null
         ? false
         : await bcrypt.compare(req.body.password, user.password);
+    console.log(passwordCorrect)
     if (!(user && passwordCorrect)) {
         console.log("xxx user", passwordCorrect)
         return res.status(400).json({
@@ -126,9 +127,6 @@ usersRouter.post("/add-favorites", async (req, res) => {
         return res.status(200).send("success").end()
     }
     return res.status(400).send("Bad request")
-})
-usersRouter.get("/images/:name", async (req, res) => {
-    res.sendFile(path.join(process.cwd(), `/images/${req.params.name}`))
 })
 usersRouter.post("/get-list-account", async (req, res) => {
     const token = getTokenFrom(req);

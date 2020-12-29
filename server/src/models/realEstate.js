@@ -15,7 +15,7 @@ const realEstateSchema = new mongoose.Schema({
         require: true
     },
     price: {
-        type: String,
+        type: Number,
         require: true
     },
     pricePer: {
@@ -23,11 +23,11 @@ const realEstateSchema = new mongoose.Schema({
         require: true
     },
     electricPrice: {
-        type: String,
+        type: Number,
         require: true
     },
     waterPrice: {
-        type: String,
+        type: Number,
         require: true
     },
     typeRealEstate: {
@@ -35,7 +35,7 @@ const realEstateSchema = new mongoose.Schema({
         require: true
     },
     size: {
-        type: String,
+        type: Number,
         require: true,
         index: true,
     },
@@ -89,12 +89,12 @@ const realEstateSchema = new mongoose.Schema({
     status: {
         type: String,
         require: true,
-        default: Config.defaultStatus
+        default: Config.DEFAULT_STATUS
     },
     isApprove: {
-        type: Boolean,
+        type: Number,
         requie: true,
-        default: false
+        default: Config.WAIT_APPROVE
     },
 })
 
@@ -103,7 +103,6 @@ realEstateSchema.set('toJSON', {
         returnedObject.id = returnedObject._id.toString()
         delete returnedObject._id
         delete returnedObject.__v
-        delete returnedObject.userId
     }
 })
 
