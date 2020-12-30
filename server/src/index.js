@@ -11,7 +11,7 @@ const path = require("path")
 const realEstateRouter = require("./controllers/realEstate");
 const usersRouter = require("./controllers/user");
 app.use(express.json());
-app.use(cors({ credentials: true, origin: 'http://localhost:3000' }));
+app.use(cors({ credentials: true, origin: "http://localhost:3000" }));
 const url = process.env.MONGO_URI
 mongoose.set('useNewUrlParser', true);
 mongoose.set('useFindAndModify', false);
@@ -32,7 +32,7 @@ const fileStorage = multer.diskStorage({
 app.use(multer({ storage: fileStorage }).any())
 app.use("/api/real-estate", realEstateRouter)
 app.use("/api/user", usersRouter)
-app.listen(port, () =>
+app.listen(process.env.PORT || port, () =>
     console.log(`Example app listening on port ${port}!`)
 );
 app.get("/images/:name", async (req, res) => {

@@ -71,6 +71,7 @@ usersRouter.post("/check-auth", async (req, res) => {
     }
     console.log(decodedToken)
     const user = await User.findById(decodedToken.id);
+    console.log(user.imagePath)
     if (user) {
         return res.status(200).json({ imagePath: user.imagePath, message: "success", activeStatus: user.activeStatus, typeAccount: user.typeAccount }).end()
     } else {
@@ -97,10 +98,11 @@ usersRouter.post("/update-profile", [
     }
     console.log("xxx req update profile", req.body);
     let imagePath = "";
+    let userUpdate = { ...req.body }
     if (req.files.length > 0) {
         imagePath = "/images/" + req.files[0].filename
+        userUpdate = { ...userUpdate, imagePath: imagePath }
     }
-    let userUpdate = { ...req.body, imagePath: imagePath }
     await User.findByIdAndUpdate(decodedToken.id, userUpdate);
     res.status(200).end()
 })
@@ -121,12 +123,40 @@ usersRouter.post("/add-favorites", async (req, res) => {
     }
     let idRealEstate = req.body.id;
     const realEstate = await RealEstate.findById(idRealEstate);
-    console.log(idRealEstate)
     if (realEstate) {
         await User.findByIdAndUpdate(decodedToken.id, { $addToSet: { listFavo: idRealEstate } });
         return res.status(200).send("success").end()
     }
     return res.status(400).send("Bad request")
+})
+usersRouter.post("/remove-favorites", async (req, res) => {
+    const token = getTokenFrom(req);
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!token || !decodedToken.id) {
+        return res.status(401).json({ error: 'token missing or invalid' })
+    }
+    let idRealEstate = req.body.id;
+    const realEstate = await RealEstate.findById(idRealEstate);
+    console.log(typeof idRealEstate)
+    if (realEstate) {
+        await User.findByIdAndUpdate(decodedToken.id, { $pull: { listFavo: idRealEstate } });
+        return res.status(200).send("success").end()
+    }
+    return res.status(400).send("Bad request")
+})
+usersRouter.post("/admin-approve-account", async (req, res) => {
+    const token = getTokenFrom(req)
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!token || !decodedToken.id) {
+        return res.status(401).json({ error: 'token missing or invalid' })
+    }
+    let user = await User.findById(decodedToken.id)
+    let typeAccount = user.typeAccount;
+    if (typeAccount === Config.ADMIN_ACCOUNT) {
+        await User.findByIdAndUpdate(req.body.id, { activeStatus: true })
+        return res.status(200).json("success").end()
+    }
+    return res.status(400).send("Bạn không có quyền truy cập").end()
 })
 usersRouter.post("/get-list-account", async (req, res) => {
     const token = getTokenFrom(req);

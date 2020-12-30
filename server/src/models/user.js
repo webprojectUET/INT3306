@@ -42,13 +42,13 @@ const userSchema = new mongoose.Schema({
     },
     activeStatus: {
         type: Boolean,
-        default: true,
+        default: false,
         require: true,
         index: true
     },
     imagePath: {
         type: String,
-        default: Config.IMAGE_PATH_DÈAULT,
+        default: "/images/default_user.png",
         require: true
     },
     listFavo: {

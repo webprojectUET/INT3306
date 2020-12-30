@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const { default: Config } = require("../../config");
 const User = require("../models/user");
 const { check, validationResult, body } = require("express-validator");
+const { Console } = require("console");
 realEstateRouter.get("/get-list-landingpage", async (req, res) => {
     let listRealEstate = await RealEstate.find({ isApprove: Config.APPROVED }).sort({ createTime: -1 }).limit(9);
     return res.status(200).json(listRealEstate).end()
@@ -19,7 +20,10 @@ realEstateRouter.post("/get-list-favorites", async (req, res) => {
         let user = await User.findById(decodedToken.id);
         let listFavo = [...user.listFavo]
         console.log(user)
-        let result = await RealEstate.find({ _id: { $in: listFavo } })
+        let result
+        if (listFavo.length > 0) {
+            result = await RealEstate.find({ id: { $in: listFavo } })
+        }
         console.log(result)
         return res.status(200).json(result).end()
     }
@@ -31,10 +35,9 @@ realEstateRouter.post("/get-list-property", async (req, res) => {
     if (!token || !decodedToken.id) {
         return res.status(401).json({ error: 'token missing or invalid' })
     }
-    let listProperty = await RealState.find({ userId: decodedToken.id })
+    let listProperty = await RealEstate.find({ userId: decodedToken.id })
     return res.status(200).json(listProperty).end()
 })
-// realEstateRouter.post("/add-favorites" )
 realEstateRouter.post("/add-property", [
     check("title", "Tiêu đề không được bỏ trống").isString().isLength({ min: 1 }),
     check("state", "Tỉnh không được bỏ trống").isString().isLength({ min: 1 }),
@@ -117,29 +120,11 @@ realEstateRouter.post("/get-property", async (req, res) => {
     if (realEstate) {
         return res.status(200).send({
             ...realEstate,
-            phone: user.phone,
+            phone: user ? user.phone : "",
             fullname: user.firstName + " " + user.lastName
         }).end()
     }
     return res.status(400).end()
-})
-realEstateRouter.post("/for-fake-data", (req, res) => {
-    console.log(req.body);
-    console.log("xxx", req.files)
-    if (req.files.length > 0) {
-        req.files.forEach(async (el) => {
-            console.log(req.files)
-            let food = new RealEstate({
-                ...req.body,
-                imagePath: "/images/" + el.filename
-            })
-            await food.save()
-        })
-
-        return res.status(200).send(`success`).end();
-    }
-    // let realState = new RealState
-    res.status(401).end()
 })
 realEstateRouter.post("/get-list-not-approve", async (req, res) => {
     const token = getTokenFrom(req)
@@ -150,11 +135,41 @@ realEstateRouter.post("/get-list-not-approve", async (req, res) => {
     let user = await User.findById(decodedToken.id)
     let typeAccount = user.typeAccount;
     if (typeAccount === Config.ADMIN_ACCOUNT) {
-        let realEstates = await RealEstate.find({ isApprove: Config.WAIT_APPROVE })
+        let realEstates = await RealEstate.find({ $or: [{ isApprove: Config.WAIT_APPROVE }, { isApprove: Config.NOT_APPROVE }] })
         return res.status(200).json(realEstates).end()
     }
     return res.status(400).send("Bạn không có quyền truy cập").end()
 })
+realEstateRouter.post("/admin-approve-property", async (req, res) => {
+    const token = getTokenFrom(req)
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!token || !decodedToken.id) {
+        return res.status(401).json({ error: 'token missing or invalid' })
+    }
+    let user = await User.findById(decodedToken.id)
+    let typeAccount = user.typeAccount;
+    if (typeAccount === Config.ADMIN_ACCOUNT) {
+        await RealEstate.findByIdAndUpdate(req.body.id, { isApprove: Config.APPROVED })
+        return res.status(200).json("success").end()
+    }
+    return res.status(400).send("Bạn không có quyền truy cập").end()
+})
+realEstateRouter.post("/admin-reject-property", async (req, res) => {
+    const token = getTokenFrom(req)
+    const decodedToken = jwt.verify(token, process.env.SECRET)
+    if (!token || !decodedToken.id) {
+        return res.status(401).json({ error: 'token missing or invalid' })
+    }
+    let user = await User.findById(decodedToken.id)
+    let typeAccount = user.typeAccount;
+    console.log(typeAccount)
+    if (typeAccount === Config.ADMIN_ACCOUNT) {
+        await RealEstate.findByIdAndUpdate(req.body.id, { isApprove: Config.NOT_APPROVE })
+        return res.status(200).json("success").end()
+    }
+    return res.status(400).send("Bạn không có quyền truy cập").end()
+})
+
 realEstateRouter.post("/search-property", async (req, res) => {
     console.log(req.body);
     let body = { ...req.body };
